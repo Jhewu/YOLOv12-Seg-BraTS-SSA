@@ -27,12 +27,12 @@ def train_yolo() -> None:
     """
     print("\nStarting Training...")
 
-    print(f"\nThis is dataset {f"./datasets/{DATASET}.yaml"}\n")
+    print(f"\nThis is dataset {f"./data/{DATASET}.yaml"}\n")
 
     args = dict(
                 # General Hyperparameters
                 model=f"{MODEL}.yaml", 
-                data=f"{DATASET}.yaml", 
+                data=DATASET, 
                 epochs=EPOCH, 
                 pretrained=PRETRAINED, 
                 imgsz=IMAGE_SIZE, 
@@ -53,7 +53,7 @@ def train_yolo() -> None:
                 cos_lr=COS_LR,
                 plots=PLOT,
                 profile=PROFILE,
-                project=f"{MODE}_{MODEL}_{GetCurrentTime()}",
+                project=f"{MODE}_{MODEL}_{get_current_time()}",
                 name=f"{MODEL}_{DATASET}", 
                 
                 # Data Augmentation Hyperparameters
