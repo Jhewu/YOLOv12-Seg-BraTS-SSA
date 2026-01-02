@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from monai.metrics import DiceMetric
+from monai.metrics import DiceMetric, HausdorffDistanceMetric
 
 def evaluate_ensemble(pred_dir: str, label_dir: str, image_size: int) -> None:
     """
@@ -30,8 +30,17 @@ def evaluate_ensemble(pred_dir: str, label_dir: str, image_size: int) -> None:
             num_classes = None,         # infers from data (will be 1 channel)
             return_with_label = False
         )
+
+    hd95 = HausdorffDistanceMetric(
+            include_background = False, 
+            percentile=95, 
+            reduction = "none",
+            get_not_nans = True, 
+        )
          
     metric.reset() # (not needed, but best practice)
+    hd95.reset()
+    total_TP = total_FP = total_FN = 0
     for i, label_path in enumerate(tqdm(label_paths)):
         label_name = os.path.basename(label_path)
         pred_path = os.path.join(pred_dir, label_name)
@@ -66,11 +75,35 @@ def evaluate_ensemble(pred_dir: str, label_dir: str, image_size: int) -> None:
         label_binary = (label > 0.5).float() # technically, it's not needed as they are already binarized when saving
         metric(pred_binary, label_binary)
 
+        # Calculate HD95
+        mask = label
+        pred_hot_encoded = torch.cat([1 - pred_binary, pred_binary], dim=1)
+        mask_hot_encoded = torch.cat([1 - mask, mask], dim=1)                    
+        hd95(pred_hot_encoded, mask_hot_encoded)
+
+         # Calculate Precision and Recall
+        TP = (pred_binary * mask).sum().float()
+        FP = (pred_binary * (1 - mask)).sum().float()
+        FN = ((1 - pred_binary) * mask).sum().float()
+        total_TP += TP.item()
+        total_FP += FP.item()
+        total_FN += FN.item()
+
     mean_dice = metric.aggregate().item()
+    val_precision_metric = total_TP / (total_TP + total_FP + 1e-6)
+    val_recall_metric = total_TP / (total_TP + total_FN + 1e-6)
+    hd95_raw_results, hd95_not_nans_count = hd95.aggregate()
+    is_valid = hd95_not_nans_count.bool()
+    successful_hd95_values = hd95_raw_results[is_valid]
+    val_hd95_metric = torch.mean(successful_hd95_values).item()
+    
     print(f"\nThe mean dice score is {mean_dice}")
+    print(f"\nThe mean hd95 score is {val_hd95_metric}")
+    print(f"\nThe mean precision score is {val_precision_metric}")
+    print(f"\nThe mean recall score is {val_recall_metric}")
 
 if __name__ == "__main__":
-    SPLIT = "val"
+    SPLIT = "test"
     PRED_PATH = f"reconstructed_{SPLIT}/labels"
     LABEL_PATH = "data/stacked_segmentation/masks"
     IMAGE_SIZE = 160

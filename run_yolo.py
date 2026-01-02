@@ -1,8 +1,11 @@
-from custom_yolo_trainer.custom_trainer import CustomSegmentationTrainer
+from custom_yolo_trainer.custom_trainer import CustomSegmentationTrainer, CustomDetectionTrainer
+from custom_yolo_predictor.custom_detseg_predictor import CustomSegmentationPredictor
 from parameters import *
 
 import time
 import os
+
+# os.environ["OMP_NUM_THREADS"] = "4"
 
 def get_current_time() -> str: 
     """
@@ -39,7 +42,7 @@ def train_yolo() -> None:
                 single_cls=SINGLE_CLS, 
                 close_mosaic=CLOSE_MOSAIC, 
                 fraction=FRACTION,
-                freeze=FREEZE,  
+                freeze=None,  
                 lr0=INITIAL_LR, 
                 lrf=FINAL_LR, 
                 warmup_epochs=WARMUP_EPOCH, 
@@ -76,11 +79,40 @@ def train_yolo() -> None:
         args["model"] = BEST_MODEL_DIR_TRAIN
         args["resume"] = RESUME
     
-    trainer = CustomSegmentationTrainer(overrides=args)
+    # trainer = CustomSegmentationTrainer(overrides=args)
+    trainer = CustomDetectionTrainer(overrides=args)
     trainer.train()
 
-    print(f"\nEnsuring the Model's input layer was changed: {trainer.setup_model()}")
-    print(f"\nFinish training, please check your directory for folder named 'train-....")
+
+#     p_args = dict(model="yolo12n-seg_converged/weights/best.pt",
+#             data=f"data/data.yaml", 
+#             device="cpu", 
+#             verbose=True,
+#             imgsz=160, 
+#             save=False)
+#             
+#     YOLO_predictor = CustomSegmentationPredictor(overrides=p_args)
+#     YOLO_predictor.setup_model(p_args["model"])
+# 
+#     import cv2
+#     from torchvision import transforms
+# 
+#     x = cv2.imread("BraTS-SSA-00046-00071-t1c.png", cv2.IMREAD_UNCHANGED)
+#     x = transforms.ToTensor()(x)
+#     x = transforms.Resize(size=(160, 160))(x)
+#     x = x.to("cpu")  
+#     x = x.unsqueeze(0)
+#     # x = x.repeat(155, 1, 1, 1)
+# 
+#     # YOLO_predictor(x)
+#     import time 
+#     start = time.perf_counter()
+#     YOLO_predictor.model.model(x)
+#     end = time.perf_counter()
+#     print((end - start)*1000)
+
+    # print(f"\nEnsuring the Model's input layer was changed: {trainer.setup_model()}")
+    # print(f"\nFinish training, please check your directory for folder named 'train-....")
 
 if __name__ == "__main__":
     train_yolo()

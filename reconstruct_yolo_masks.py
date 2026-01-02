@@ -52,11 +52,11 @@ def reconstruct_masks(data_path: str, split: str, root_dest_dir: str) -> None:
 
 if __name__ == "__main__": 
     DATA_PATH = "data/stacked_segmentation"
-    SPLIT = "val"
-    MODEL_PATH = "yolo_checkpoint/weights/best.pt"
+    SPLIT = "test"
+    MODEL_PATH = "yolo12x_converged/yolo12x-seg_data/data.yaml/weights/best.pt"
     DEST_DIR = f"reconstructed_{SPLIT}/labels"
     
     IMAGE_SIZE = 160
-    CONFIDENCE = 0.7
+    CONFIDENCE = 0.25
     
     reconstruct_masks(DATA_PATH, SPLIT, DEST_DIR)
