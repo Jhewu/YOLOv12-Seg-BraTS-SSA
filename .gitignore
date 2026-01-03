@@ -4,3 +4,6 @@ runs/*
 archive/
 __pycache__/
 2026/
+*.pt
+train_yolo12*/
+yolo12n*/

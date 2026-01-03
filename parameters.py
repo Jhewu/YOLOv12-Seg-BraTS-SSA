@@ -7,7 +7,7 @@ for more information
 
 # General parameters
 MODE = "train"            # train, val, test, predict
-MODEL = "yolo12s-seg"
+MODEL = "yolo12m-seg"
 DATASET = "data/data.yaml"
 SEED = 42
 
