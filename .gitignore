@@ -2,3 +2,5 @@ data/*
 reconstructed*/
 runs/*
 archive/
+__pycache__/
+2026/
