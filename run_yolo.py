@@ -1,16 +1,17 @@
 # Local
 from custom_yolo_trainer.custom_trainer import CustomSegmentationTrainer, CustomDetectionTrainer
 from custom_yolo_predictor.custom_detseg_predictor import CustomSegmentationPredictor
-from parameters import *
 
 # Internal
+import argparse
+import importlib
 import time
+import sys
 import os
 
 # External
 import torch
 from torch.profiler import profile, ProfilerActivity, record_function
-
 
 def get_current_time() -> str:
     """
@@ -30,149 +31,149 @@ def create_dir(folder_name: str) -> None:
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
-def test_ultralytics_yolo(warm_ups: bool = True,
-              batch: int = 128,
-              iterations: int = 3) -> None:
-    # Set environment variables to restrict other libraries to 1 thread
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
-    os.environ["MKL_NUM_THREADS"] = "1"
-    os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# def test_ultralytics_yolo(warm_ups: bool = True,
+#               batch: int = 128,
+#               iterations: int = 3) -> None:
+#     # Set environment variables to restrict other libraries to 1 thread
+#     os.environ["OMP_NUM_THREADS"] = "1"
+#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
+#     os.environ["MKL_NUM_THREADS"] = "1"
+#     os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+#     os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
-    # Restrict PyTorch's intra-op parallelism to 1 thread
-    torch.set_num_threads(1)
+#     # Restrict PyTorch's intra-op parallelism to 1 thread
+#     torch.set_num_threads(1)
 
-    # You can also check the current setting
-    print(f"PyTorch using {torch.get_num_threads()} threads.")
-    from ultralytics import YOLO
-    dummy_data = torch.zeros(batch, 3, 160, 160)
+#     # You can also check the current setting
+#     print(f"PyTorch using {torch.get_num_threads()} threads.")
+#     from ultralytics import YOLO
+#     dummy_data = torch.zeros(batch, 3, 160, 160)
 
-    model = YOLO("yolo11s-seg.pt")
-    model = model.model
-    model.to("cpu")
+#     model = YOLO("yolo11s-seg.pt")
+#     model = model.model
+#     model.to("cpu")
     
-    if warm_ups:
-        for _ in range(2):
-            model(dummy_data)
-        with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
-            with record_function("model_inference"):
-                for _ in range(iterations):
-                    model(dummy_data)
+#     if warm_ups:
+#         for _ in range(2):
+#             model(dummy_data)
+#         with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
+#             with record_function("model_inference"):
+#                 for _ in range(iterations):
+#                     model(dummy_data)
 
-        # Get the key averages
-        key_avg = prof.key_averages()
+#         # Get the key averages
+#         key_avg = prof.key_averages()
 
-        # Calculate total CPU time from all operations
-        total_cpu_time = sum([item.self_cpu_time_total for item in key_avg])
-        avg_time_per_iteration = total_cpu_time / iterations
+#         # Calculate total CPU time from all operations
+#         total_cpu_time = sum([item.self_cpu_time_total for item in key_avg])
+#         avg_time_per_iteration = total_cpu_time / iterations
 
-        print(f"--- Results averaged over {iterations} iterations ---")
-        print(f"Total CPU time: {total_cpu_time / 1e6:.2f}")
-        print(f"Average time per iteration: {
-              avg_time_per_iteration / 1e6:.2f}")
-        print("\nPer-operation breakdown:")
-        print(prof.key_averages().table(
-            sort_by="cpu_time_total",
-            row_limit=10
-        ))
+#         print(f"--- Results averaged over {iterations} iterations ---")
+#         print(f"Total CPU time: {total_cpu_time / 1e6:.2f}")
+#         print(f"Average time per iteration: {
+#               avg_time_per_iteration / 1e6:.2f}")
+#         print("\nPer-operation breakdown:")
+#         print(prof.key_averages().table(
+#             sort_by="cpu_time_total",
+#             row_limit=10
+#         ))
         
 
-def test_yolo(warm_ups: bool = True,
-              batch: int = 128,
-              iterations: int = 3) -> None:
-    # Set environment variables to restrict other libraries to 1 thread
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
-    os.environ["MKL_NUM_THREADS"] = "1"
-    os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# def test_yolo(warm_ups: bool = True,
+#               batch: int = 128,
+#               iterations: int = 3) -> None:
+#     # Set environment variables to restrict other libraries to 1 thread
+#     os.environ["OMP_NUM_THREADS"] = "1"
+#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
+#     os.environ["MKL_NUM_THREADS"] = "1"
+#     os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+#     os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
-    # Restrict PyTorch's intra-op parallelism to 1 thread
-    torch.set_num_threads(1)
+#     # Restrict PyTorch's intra-op parallelism to 1 thread
+#     torch.set_num_threads(1)
 
-    # You can also check the current setting
-    print(f"PyTorch using {torch.get_num_threads()} threads.")
+#     # You can also check the current setting
+#     print(f"PyTorch using {torch.get_num_threads()} threads.")
 
-    args = dict(
-        # General Hyperparameters
-        model=f"{MODEL}.yaml",
-        data=DATASET,
-        epochs=EPOCH,
-        pretrained=PRETRAINED,
-        imgsz=IMAGE_SIZE,
-        single_cls=SINGLE_CLS,
-        close_mosaic=CLOSE_MOSAIC,
-        fraction=FRACTION,
-        freeze=None,
-        lr0=INITIAL_LR,
-        lrf=FINAL_LR,
-        warmup_epochs=WARMUP_EPOCH,
-        cls=CLS,
-        box=BOX,
-        dfl=DFL,
-        seed=SEED,
-        batch=BATCH,
-        amp=MIX_PRECISION,
-        multi_scale=MULTI_SCALE,
-        cos_lr=COS_LR,
-        plots=PLOT,
-        profile=PROFILE,
-        project=f"{MODE}_{MODEL}_{get_current_time()}",
-        name=f"{MODEL}_{DATASET}",
+#     args = dict(
+#         # General Hyperparameters
+#         model=f"{MODEL}.yaml",
+#         data=DATASET,
+#         epochs=EPOCH,
+#         pretrained=PRETRAINED,
+#         imgsz=IMAGE_SIZE,
+#         single_cls=SINGLE_CLS,
+#         close_mosaic=CLOSE_MOSAIC,
+#         fraction=FRACTION,
+#         freeze=None,
+#         lr0=INITIAL_LR,
+#         lrf=FINAL_LR,
+#         warmup_epochs=WARMUP_EPOCH,
+#         cls=CLS,
+#         box=BOX,
+#         dfl=DFL,
+#         seed=SEED,
+#         batch=BATCH,
+#         amp=MIX_PRECISION,
+#         multi_scale=MULTI_SCALE,
+#         cos_lr=COS_LR,
+#         plots=PLOT,
+#         profile=PROFILE,
+#         project=f"{MODE}_{MODEL}_{get_current_time()}",
+#         name=f"{MODEL}_{DATASET}",
 
-        # Data Augmentation Hyperparameters
-        hsv_h=HSV_H,
-        hsv_s=HSV_S,
-        hsv_v=HSV_V,
-        degrees=DEGREES,
-        translate=TRANSLATE,
-        scale=SCALE,
-        flipud=FLIPUD,
-        fliplr=FLIPLR,
-        mosaic=MOSAIC,
-        shear=SHEAR,
-        perspective=PERSPECTIVE,
-        mixup=MIXUP,
-        cutmix=CUTMIX)
+#         # Data Augmentation Hyperparameters
+#         hsv_h=HSV_H,
+#         hsv_s=HSV_S,
+#         hsv_v=HSV_V,
+#         degrees=DEGREES,
+#         translate=TRANSLATE,
+#         scale=SCALE,
+#         flipud=FLIPUD,
+#         fliplr=FLIPLR,
+#         mosaic=MOSAIC,
+#         shear=SHEAR,
+#         perspective=PERSPECTIVE,
+#         mixup=MIXUP,
+#         cutmix=CUTMIX)
 
-    if LOAD_AND_TRAIN:
-        print("\nLoading and Training...")
-        args["model"] = BEST_MODEL_DIR
-        args["resume"] = RESUME
+#     if LOAD_AND_TRAIN:
+#         print("\nLoading and Training...")
+#         args["model"] = BEST_MODEL_DIR
+#         args["resume"] = RESUME
 
-    YOLO_predictor = CustomSegmentationPredictor(overrides=args)
-    YOLO_predictor.setup_model(args["model"])
-    model = YOLO_predictor.model.model
+#     YOLO_predictor = CustomSegmentationPredictor(overrides=args)
+#     YOLO_predictor.setup_model(args["model"])
+#     model = YOLO_predictor.model.model
 
-    model.to("cpu")
-    model.eval()
+#     model.to("cpu")
+#     model.eval()
 
 
-    if warm_ups:
-        for _ in range(2):
-            model(dummy_data)
-        with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
-            with record_function("model_inference"):
-                for _ in range(iterations):
-                    model(dummy_data)
+#     if warm_ups:
+#         for _ in range(2):
+#             model(dummy_data)
+#         with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
+#             with record_function("model_inference"):
+#                 for _ in range(iterations):
+#                     model(dummy_data)
 
-        # Get the key averages
-        key_avg = prof.key_averages()
+#         # Get the key averages
+#         key_avg = prof.key_averages()
 
-        # Calculate total CPU time from all operations
-        total_cpu_time = sum([item.self_cpu_time_total for item in key_avg])
-        avg_time_per_iteration = total_cpu_time / iterations
+#         # Calculate total CPU time from all operations
+#         total_cpu_time = sum([item.self_cpu_time_total for item in key_avg])
+#         avg_time_per_iteration = total_cpu_time / iterations
 
-        print(f"--- Results averaged over {iterations} iterations ---")
-        print(f"Total CPU time: {total_cpu_time / 1e6:.2f}")
-        print(f"Average time per iteration: {
-              avg_time_per_iteration / 1e6:.2f}")
-        print("\nPer-operation breakdown:")
-        print(prof.key_averages().table(
-            sort_by="cpu_time_total",
-            row_limit=10
-        ))
+#         print(f"--- Results averaged over {iterations} iterations ---")
+#         print(f"Total CPU time: {total_cpu_time / 1e6:.2f}")
+#         print(f"Average time per iteration: {
+#               avg_time_per_iteration / 1e6:.2f}")
+#         print("\nPer-operation breakdown:")
+#         print(prof.key_averages().table(
+#             sort_by="cpu_time_total",
+#             row_limit=10
+#         ))
 
 
 def train_yolo() -> None:
@@ -229,12 +230,41 @@ def train_yolo() -> None:
         args["model"] = BEST_MODEL_DIR
         args["resume"] = RESUME
 
-    trainer = CustomSegmentationTrainer(overrides=args)
-    # trainer = CustomDetectionTrainer(overrides=args)
+    if DETECTION_OR_SEGMENTATION:
+        trainer = CustomDetectionTrainer(overrides=args)
+    else: 
+        trainer = CustomSegmentationTrainer(overrides=args)
+    
     trainer.train()
 
-
 if __name__ == "__main__":
-    train_yolo()
-    # test_yolo()
-    # test_ultralytics_yolo()
+    # -------------------------------------------------------------
+    des="""
+    Run YOLO Ultralytics for training. 
+    """
+    # -------------------------------------------------------------
+
+    parser = argparse.ArgumentParser(description=des.lstrip(" "), formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--param_dir", type=str,help='directory of parameters.py containing YOLO Ultralytics hyperparameters. default is parameters.py\t[parameters.py]')
+    parser.add_argument("--train_or_evaluate", type=int,help='if 1 is train, if 0 is evaluate. default is train\t[1]')
+    parser.add_argument("--detection_or_segmentation", type=int,help='if 1 is detection, if 0 is segmentation. default is detection\t[1]')
+    args = parser.parse_args()
+
+    if args.param_dir is not None:
+        PARAM_DIR = args.param_dir
+    else: 
+        PARAM_DIR = "parameters"
+    if args.train_or_evaluate is not None:
+        TRAIN_OR_EVALUATE = args.train_or_evaluate
+    else: TRAIN_OR_EVALUATE = 1
+    if args.detection_or_segmentation is not None:
+        DETECTION_OR_SEGMENTATION = args.detection_or_segmentation
+    else: DETECTION_OR_SEGMENTATION = 1
+
+    module = importlib.import_module(PARAM_DIR)
+    globals().update({k: v for k, v in vars(module).items() if not k.startswith("_")})
+
+    if TRAIN_OR_EVALUATE:
+        train_yolo()
+    else: 
+        print("Evaluation not implemented yet. Please set --train_or_evaluate to 1 to train the model.")

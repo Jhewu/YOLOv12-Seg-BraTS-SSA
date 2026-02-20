@@ -1,5 +1,5 @@
 # YOLOv12-Seg-BraTS-SSA
-Brain Tumor Segmentation with YOLOv12-Seg (n) on BraTS SSA
+Brain Tumor Segmentation with YOLOv12-Seg (n) on BraTS SSA 
 
 # Directory Description
 - archive/ : archive of probably useless files and directories
@@ -7,6 +7,7 @@ Brain Tumor Segmentation with YOLOv12-Seg (n) on BraTS SSA
 - custom_yolo_predictor : custom YOLO Ultralytics for 4-channels predict
 - custom_yolo_trainer : custom YOLO Ultralytics for 4-channels training
 - data : training data (YOLO Ultralytics format)
+- 3_fold_run : directory where parameters_*.py and data_*.yaml are stored for 3-fold cross validation training in one go
 
 # File Description
 - evaluate_ensemble.py : previously created to evaluate YOLO-UNet essemble
@@ -15,4 +16,6 @@ Brain Tumor Segmentation with YOLOv12-Seg (n) on BraTS SSA
 - run_yolo : runs YOLOv12 inference or training
 - parameters.py : separate parameter configuration file. Used in conjunction with run_yolo.py
 - ...*pt : pretrained checkpoints from YOLO Ultralytics
+
+
 
