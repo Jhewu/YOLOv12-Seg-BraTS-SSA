@@ -245,7 +245,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
 
     parser = argparse.ArgumentParser(description=des.lstrip(" "), formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("--param_dir", type=str,help='directory of parameters.py containing YOLO Ultralytics hyperparameters. default is parameters.py\t[parameters.py]')
+    parser.add_argument("--param_dir", type=str,help='module name containing YOLO Ultralytics hyperparameters. default is parameters if in a subdirectory then subdir.parameters\t[parameters.py]')
     parser.add_argument("--train_or_evaluate", type=int,help='if 1 is train, if 0 is evaluate. default is train\t[1]')
     parser.add_argument("--detection_or_segmentation", type=int,help='if 1 is detection, if 0 is segmentation. default is detection\t[1]')
     args = parser.parse_args()
