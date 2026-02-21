@@ -7,3 +7,6 @@ __pycache__/
 *.pt
 train_yolo12*/
 yolo12n*/
+3_fold_dataset/
+.vscode/
+__pycache__/
