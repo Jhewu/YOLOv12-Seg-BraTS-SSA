@@ -22,7 +22,7 @@ def run_kfold_cross_validation():
         K (GLOBAL int): K parameter in K-Fold Cross Validation    
     """
 
-    command = ["python3", "run_yolo.py", "--train_or_evaluate", "1", "--detection_or_segmentation", "1"]
+    command = ["python3", "run_yolo.py", "--train_or_evaluate", "1", "--detection_or_segmentation", f"{DETECTION_OR_SEGMENTATION}"]
 
     # Check if directories exist before running the command
     for i in range(K): 
@@ -60,12 +60,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=des.lstrip(" "), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-p", "--param_dirs", nargs="+", type=str,help='directories of parameters.py containing YOLO Ultralytics hyperparameters for each fold. \t[3_fold_dataset/parameters_1.py, 3_fold_dataset/parameters_2.py, 3_fold_dataset/parameters_3.py]')
+    parser.add_argument("-d", "--detect_or_segment", type=int,help='1 for detection, 0 for segmentation. Default is 0\t[0]')
     parser.add_argument("-k", "--k", type=int,help='K parameter in K-Fold Cross Validation. Default is 3\t[3]')
     args = parser.parse_args()
 
     if args.k is not None:
         K = args.k
     else: K = 3
+    if args.detect_or_segment is not None:
+        DETECTION_OR_SEGMENTATION = args.detect_or_segment
+    else: DETECTION_OR_SEGMENTATION = 1
     if args.param_dirs is not None:
         PARAM_DIRS = args.param_dirs
     else: 
