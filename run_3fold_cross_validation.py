@@ -38,8 +38,8 @@ def run_kfold_cross_validation():
 
         # Expand the command to include the parameter directory
         parameter_dir = reformat_parameter_dirs([PARAM_DIRS[i]])[0]
-        command.extend(["--param_dir", f"{parameter_dir}"])
-        result = subprocess.run(command, capture_output=True, text=True)
+        fold_command = command + ["--param_dir", f"{parameter_dir}"]
+        result = subprocess.run(fold_command, text=True)
 
         # Print the result
         print("Output: ", result.stdout) # Output from the script
