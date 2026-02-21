@@ -7,8 +7,8 @@ for more information
 
 # General parameters
 MODE = "train"            # train, val, test, predict
-MODEL = "yolo12n"
-DATASET = "3_fold_run/data_1.yaml"
+MODEL = "yolo12n-seg"
+DATASET = "3_fold_segment_run/data_0.yaml"
 SEED = 42
 
 # Training parameters
