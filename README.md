@@ -6,8 +6,10 @@ Brain Tumor Segmentation with YOLOv12-Seg (n) on BraTS SSA
 - 2026/ : 2026 archive
 - custom_yolo_predictor : custom YOLO Ultralytics for 4-channels predict
 - custom_yolo_trainer : custom YOLO Ultralytics for 4-channels training
-- data : training data (YOLO Ultralytics format)
-- 3_fold_run : directory where parameters_*.py and data_*.yaml are stored for 3-fold cross validation training in one go
+- data : standard training data in YOLO Ultralytics format (non k-fold)
+- 3_fold_dataset: training dataset for k-fold YOLO detect and segment training
+- 3_fold_detect_run : directory where parameters_*.py and data_*.yaml are stored for 3-fold cross validation training in one go (detect)
+- 3_fold_segment_run : directory where parameters_*.py and data_*.yaml are stored for 3-fold cross validation training in one go (segment)
 
 # File Description
 - evaluate_ensemble.py : previously created to evaluate YOLO-UNet essemble
