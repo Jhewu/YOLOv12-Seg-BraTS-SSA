@@ -1,12 +1,15 @@
+# Permanent
 data/*
 reconstructed*/
 runs/*
 archive/
-__pycache__/
-2026/
 *.pt
 train_yolo12*/
-yolo12n*/
 3_fold_dataset/
+
+# Temporary
+__pycache__/
+2026/
+yolo12*/
 .vscode/
 __pycache__/
