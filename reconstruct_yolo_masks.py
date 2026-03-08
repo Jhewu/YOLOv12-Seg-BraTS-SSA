@@ -35,7 +35,7 @@ def reconstruct_masks(data_path: str, split: str, root_dest_dir: str) -> None:
     images = sorted([os.path.join(data_path, "images", split, i) for i in os.listdir(os.path.join(data_path, "images", split))])
 
     # Configure YOLO inference
-    args = dict(conf=CONFIDENCE, save=False, device="cuda", imgsz=IMAGE_SIZE, batch=1, verbose=False)  
+    args = dict(conf=CONFIDENCE, save=False, device=device, imgsz=IMAGE_SIZE, batch=1, verbose=False)  
     predictor = CustomSegmentationPredictor(overrides=args)
     predictor.setup_model(MODEL_PATH)
 
