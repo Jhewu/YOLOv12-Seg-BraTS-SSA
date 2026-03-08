@@ -1,9 +1,14 @@
+# Internal
 import os
+import argparse
+
+# External 
 import cv2
 import torch
 import numpy as np
 from tqdm import tqdm
 
+# Local
 from custom_yolo_predictor.custom_detseg_predictor import CustomSegmentationPredictor
 
 def create_dir(folder_name: str) -> None:
@@ -51,12 +56,25 @@ def reconstruct_masks(data_path: str, split: str, root_dest_dir: str) -> None:
                 cv2.imwrite(os.path.join( dest_dir, os.path.basename(result.path) ), cumulative)
 
 if __name__ == "__main__": 
-    DATA_PATH = "data/stacked_segmentation"
-    SPLIT = "test"
-    MODEL_PATH = "yolo12x_converged/yolo12x-seg_data/data.yaml/weights/best.pt"
-    DEST_DIR = f"reconstructed_{SPLIT}/labels"
+    # -------------------------------------------------------------
+    des="""
+    Reconstruct Masks from YOLOSeg Masks for Metrics Evaluation 
+    (non-Ultralytics Metrics)
+    """
+    # -------------------------------------------------------------
+    parser = argparse.ArgumentParser(description=des.lstrip(" "), formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("-i", "--image_size", type=int, help='original image size to reconstruct towards\t[160]')
+    parser.add_argument("-c", "--conf", type=float, help='confidence threshold of YOLO predictions\t[0.25]')
+    parser.add_argument("-m", "--model_path", type=str, help='path of pretrained unet model weights\t[checkpoints/unet_0/best.pt]')
+    parser.add_argument("-d", "--data_path", type=str, help='root path of the dataset\t[3_fold_dataset/stacked_segmentation_0]')
+    parser.add_argument("-s", "--split", type=str, help='split to evaluate\t[test]')
+    args = parser.parse_args()
+
+    DATA_PATH = args.data_path or ""
+    MODEL_PATH = args.model_path or ""
+    SPLIT = args.split or "test"
     
-    IMAGE_SIZE = 160
-    CONFIDENCE = 0.25
+    IMAGE_SIZE = args.image_size or 160
+    CONFIDENCE = args.conf or 0.25
     
-    reconstruct_masks(DATA_PATH, SPLIT, DEST_DIR)
+    reconstruct_masks(DATA_PATH, SPLIT, f"reconstructed_{SPLIT}/labels")
